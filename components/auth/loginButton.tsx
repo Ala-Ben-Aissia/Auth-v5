@@ -12,7 +12,6 @@ export default function LoginButton({ children, mode = "redirect" }: Props) {
   const router = useRouter()
 
   function onClick() {
-    console.log("LoginButton Clicked")
     router.push("/auth/login")
   }
 
