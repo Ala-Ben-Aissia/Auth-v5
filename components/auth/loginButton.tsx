@@ -8,10 +8,7 @@ type Props = {
   asChild?: boolean
 }
 
-export default function LoginButton({
-  children,
-  mode = "redirect",
-}: Props) {
+export default function LoginButton({ children, mode = "redirect" }: Props) {
   const router = useRouter()
 
   function onClick() {
