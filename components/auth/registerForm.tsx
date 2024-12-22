@@ -15,11 +15,11 @@ import { useState, useTransition } from "react"
 import { useForm } from "react-hook-form"
 import { FiLoader } from "react-icons/fi"
 import { z } from "zod"
+import FormError from "../formError"
 import FormSuccess from "../formSuccess"
 import { Button } from "../ui/button"
 import { Input } from "../ui/input"
 import CardWrapper from "./cardWrapper"
-import FormError from "../formError"
 
 export default function RegisterForm() {
   const form = useForm<z.infer<typeof RegisterSchema>>({
@@ -28,7 +28,7 @@ export default function RegisterForm() {
       email: "",
       password: "",
       confirmPassword: "",
-      username: ""
+      name: ""
     }
   })
 
@@ -60,10 +60,10 @@ export default function RegisterForm() {
           <div className="space-y-4">
             <FormField
               control={form.control}
-              name="username"
+              name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Username</FormLabel>
+                  <FormLabel>name</FormLabel>
                   <FormControl>
                     <Input
                       placeholder="john doe"
