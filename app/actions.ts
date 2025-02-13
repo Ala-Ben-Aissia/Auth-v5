@@ -1,9 +1,12 @@
 "use server"
 
+import { signIn } from "@/auth"
 import { prisma } from "@/lib/client"
-import { getUserByEmail, wait } from "@/lib/utils"
+import { getUserByEmail } from "@/lib/utils"
+import { DEFAULT_LOGIN_REDIRECT } from "@/routes"
 import { LoginSchema, RegisterSchema } from "@/schemas"
 import { hash } from "bcryptjs"
+import { AuthError } from "next-auth"
 import { z } from "zod"
 
 export async function login(data: z.infer<typeof LoginSchema>) {
@@ -12,7 +15,34 @@ export async function login(data: z.infer<typeof LoginSchema>) {
   if (!validatedData.success) {
     return { success: false, message: "Invalid input data" }
   }
-  await wait(1000)
+
+  const { email, password } = validatedData.data
+
+  try {
+    await signIn("credentials", {
+      email,
+      password,
+      redirectTo: DEFAULT_LOGIN_REDIRECT,
+    })
+  } catch (error) {
+    if (error instanceof AuthError) {
+      switch (error.type) {
+        case "CredentialsSignin":
+          return { success: false, message: "Invalid credentials" }
+        case "OAuthSignInError":
+          return {
+            success: false,
+            message: "Failed to sign in with OAuth provider",
+          }
+        default:
+          return {
+            success: false,
+            message: "Failed to sign in. Please try again later.",
+          }
+      }
+    }
+    throw error // to redirect te user to the DEFAULT_LOGIN_REDIRECT (Next.js thing...)
+  }
   return { success: true, message: "Login successful" }
 }
 
@@ -23,16 +53,17 @@ export async function register(data: z.infer<typeof RegisterSchema>) {
     return { success: false, message: "Invalid input data" }
   }
 
-  const { password, confirmPassword, name, email } = validatedData.data
+  const { password, confirmPassword, name, email } =
+    validatedData.data
 
   if (password !== confirmPassword) {
     return { success: false, message: "Passwords do not match" }
   }
 
   const hashedPassword = await hash(password, 10)
-  const ExisitingUser = await getUserByEmail(email)
+  const exisitingUser = await getUserByEmail(email)
 
-  if (ExisitingUser) {
+  if (exisitingUser) {
     return { success: false, message: "User already exists" }
   }
 
@@ -46,10 +77,11 @@ export async function register(data: z.infer<typeof RegisterSchema>) {
     })
     return { success: true, message: "Register successful" }
   } catch (error) {
-    console.error("Failed to create user:", error)
+    console.error("🚨 Failed to create user:", error)
     return {
       success: false,
-      message: "Failed to create user account. Please try again later.",
+      message:
+        "Failed to create user account. Please try again later.",
     }
   }
 }
